@@ -72,11 +72,18 @@ conditioning than CPU for these spectra.
 tiling/alignment/workspace artifact — it is intrinsic to the fp32 SVD on a smooth
 spectrum. Confirmed robust across random seeds.
 
-![SVD error vs size](svd_error_vs_size.png)
+![SVD error vs size, fp32](svd_error_vs_size.png)
 
 The ROCm fp32 error (red) is flat and far above 10% for every size 8…4096, while
-CPU fp32 (blue) stays ~1e-4; band = min/max over 5 seeds. Regenerate with
-`python plot_size.py`.
+CPU fp32 (blue) stays ~1e-4; band = min/max over 5 seeds.
+
+In fp64 the same matrices are accurate on **both** backends (~1e-12, ~9 orders
+below the failure threshold) — i.e. fp64 is the fix, and nothing about these
+matrices is intrinsically unsolvable:
+
+![SVD error vs size, fp64 control](svd_error_vs_size_fp64.png)
+
+Regenerate both with `python plot_size.py`.
 
 ## Practical predicate
 
