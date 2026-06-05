@@ -101,6 +101,45 @@ torch.backends.cuda.matmul.allow_tf32: False
 
 Also reproduced on PyTorch `2.7.1+rocm7.2.2` (HIP 7.2) on the same GPU.
 
+## Root-cause characterization (what structure triggers it)
+
+We synthesized SPD matrices `A = Q diag(s) Qᵀ` with prescribed spectra to map the
+failure (`structure_probe.py`; full tables in `STRUCTURE.md`). Findings:
+
+- **It is the spectral shape, not the condition number.** A spectrum that decays
+  smoothly with many singular values per decade (geometric / power-law) triggers
+  it; a high condition number caused by a *single* small outlier (random /
+  Marchenko–Pastur) or by *exactly degenerate* clusters does **not** (ROCm matches
+  or beats CPU on exact clusters). This is why a random matrix at cond 8.5e9 looks
+  fine while this structured matrix at cond 9e5 fails.
+- **Onset at cond ≳ 1e4** for smooth spectra: ROCm fp32 singular-value error jumps
+  from ~1e-4 (cond ≤ 1e3) to tens of percent (cond ≥ 1e4). CPU fp32 stays accurate
+  to cond ~1e7 — i.e. ROCm tolerates 3–4 orders of magnitude less conditioning.
+- **Size-independent.** An 8×8 matrix fails exactly like a 4096×4096 one, with no
+  power-of-2 effect (N = 1023/1024/1025 identical). Not a tiling/workspace artifact.
+
+Because exact ties are handled fine but close-but-distinct singular values are not,
+this looks like insufficient resolution/convergence tolerance for tightly-spaced
+(small relative gap) singular values in the ROCm `gesvd` path, rather than a
+deflation-of-equal-values bug.
+
+A fully model-free, ~15-line reproduction (no data file) is in `repro_synthetic.py`:
+
+```python
+import torch
+N, cond = 16, 1e6
+g = torch.Generator().manual_seed(0)
+Q, _ = torch.linalg.qr(torch.randn(N, N, dtype=torch.float64, generator=g))
+s = (1.0 / cond) ** (torch.arange(N, dtype=torch.float64) / (N - 1))   # geometric spectrum
+A = ((Q * s) @ Q.T).to(torch.float32)
+ref = torch.linalg.svdvals(A.double())                                  # truth
+for dev in ("cpu", "cuda"):
+    S = torch.linalg.svdvals(A.to(dev)).double().cpu()
+    rel = (S - ref).abs() / ref.abs()
+    print(dev, "mean rel-err", float(rel.mean()), "frac>10%", float((rel > 0.1).float().mean()))
+# cpu  ~2.5e-4 (0.00) ;  cuda ~2.1e-1 (0.31)  <- broken on ROCm
+```
+
 ## Additional context
 
 - **Workaround:** for the ridge least-squares use case that surfaced this, replacing

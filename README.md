@@ -51,12 +51,25 @@ or to fp64, or running on CPU, all fix it. The defect is in the fp32 SVD, so any
 code path that reaches `torch.linalg.svd`/`svdvals`/`pinverse` in fp32 on this
 backend is affected.
 
+## What structure triggers it
+
+The trigger is **spectral shape, not condition number**: many singular values with
+small relative gaps spread smoothly over a wide range (power-law / geometric decay,
+cond ≳ 1e4) — exactly a real covariance + ridge matrix. It is **size-independent**
+(an 8×8 matrix fails like a 4096×4096 one). A high cond from a single outlier
+(random matrices) or from exactly-degenerate clusters does *not* trigger it. Full
+characterization with sweeps in [`STRUCTURE.md`](STRUCTURE.md); regenerate with
+`python structure_probe.py all`.
+
 ## Files
 
 | file | what |
 |---|---|
-| `repro.py` | standalone reproduction (torch only) |
-| `cxx_layer1.pt` | the offending `[1025,1025]` fp32 SPD matrix (~4 MB) |
+| `repro.py` | standalone reproduction on the real matrix (torch only) |
+| `repro_synthetic.py` | model-free reproduction — generates a tiny matrix, no data file |
+| `structure_probe.py` | sweeps spectrum shape / cond / size to characterize the trigger |
+| `cxx_layer1.pt` | the offending real `[1025,1025]` fp32 SPD matrix (~4 MB) |
+| `STRUCTURE.md` | what matrix structure triggers the bug (sweep results) |
 | `ISSUE.md` | ready-to-file upstream bug report |
 
 ## Environment where observed
