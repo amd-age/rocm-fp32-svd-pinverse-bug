@@ -80,14 +80,25 @@ when it comes with many densely-spaced singular values.
 | 1023 / 1024 / 1025 | 8.3e-5 | 2.4e-1 | 0.43 |
 | 4096 | 5.2e-5 | 2.6e-1 | 0.46 |
 
-**Essentially size-independent, no power-of-2 effect** (1023≈1024≈1025). Not a
-tiling/alignment/workspace artifact — it is intrinsic to the fp32 SVD on a smooth
-spectrum. Confirmed robust across random seeds.
+**In the catastrophic regime the error is size-independent** (8×8 fails like
+4096×4096), with no power-of-2 effect (1023≈1024≈1025). Not a
+tiling/alignment/workspace artifact. This is because at cond=1e6 the error is
+*saturated* (~0.24) — once the SVD is broken, adding dimension can't make it worse.
 
 ![SVD error vs size, fp32](svd_error_vs_size.png)
 
 The ROCm fp32 error (red) is flat and far above 10% for every size 8…4096, while
 CPU fp32 (blue) stays ~1e-4; band = min/max over 5 seeds.
+
+**Outside saturation, there *is* a size effect.** At a fixed moderate cond (e.g.
+1e3, below the catastrophe onset), ROCm's fp32 error grows ~**N^1.24** with size,
+while CPU stays flat (`plot_baseline_size.py`). So ROCm's fp32 SVD has a much larger
+error-growth-with-dimension constant than CPU; the catastrophic regime simply
+saturates this growth at a high floor. (This benign-baseline growth is also why
+ordinary Gaussian matrices, §"Random-entry matrices", show a rising ROCm error with
+N: their cond grows with N *and* the dimension itself contributes.)
+
+![SVD error vs size at fixed cond, isolating the dimension effect](svd_error_vs_size_fixedcond.png)
 
 The same holds with **randomized** singular values (log-uniform across the range
 instead of a geometric law; `plot_random_size.py`) — so the failure is not an

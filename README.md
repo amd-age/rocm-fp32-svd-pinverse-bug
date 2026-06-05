@@ -108,6 +108,7 @@ characterization with sweeps in [`STRUCTURE.md`](STRUCTURE.md); regenerate with
 | `plot_random_size.py` / `svd_error_vs_size_random.png` | error-vs-size with RANDOM singular values |
 | `random_matrix_probe.py` | random-ENTRY matrices (no QSQᵀ); shows the bug is not universal |
 | `plot_normal_size.py` / `svd_error_vs_size_normal.png` | control: error-vs-size for ordinary Gaussian matrices (ROCm fine) |
+| `plot_baseline_size.py` / `svd_error_vs_size_fixedcond.png` | error-vs-size at FIXED cond — isolates ROCm's ~N^1.2 dimension effect |
 | `plot_cond.py` / `svd_error_vs_cond.png` | error-vs-condition-number, geometric spectrum (CPU vs ROCm) |
 | `cxx_layer1.pt` | the offending real `[1025,1025]` fp32 SPD matrix (~4 MB) |
 | `STRUCTURE.md` | what matrix structure triggers the bug (sweep results) |
