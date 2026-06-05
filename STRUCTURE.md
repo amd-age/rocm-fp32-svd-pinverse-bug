@@ -58,15 +58,17 @@ collapse at cond ≳ 1e4** (singular values wrong by tens of percent). CPU fp32 
 clean until cond ~1e7–1e8. So ROCm tolerates ~3–4 orders of magnitude *less*
 conditioning than CPU for these spectra.
 
-**But condition number alone does not predict the error — shape does.** Plotting
-error vs cond for several shapes (`plot_cond.py`): the dense spectra (geometric,
-flat_tail) climb and cross 10% near cond 1e4, while an `outlier` spectrum (a
-well-conditioned bulk plus a single isolated tiny singular value) stays accurate
-to ~6e-5 even at **cond 1e9**. At a fixed cond=1e6 the dense shapes are ~3000×
-worse than the outlier shape. So a high condition number per se is harmless; it is
-harmful only when it comes with many densely-spaced singular values.
+`plot_cond.py` plots this for the geometric spectrum, CPU vs ROCm: both rise with
+condition number (the small-singular-value error is floored at ~eps·cond by Weyl's
+theorem), but ROCm crosses 10% near cond ~1e5 while CPU stays accurate until cond
+~1e9 — ROCm sits far above the fundamental floor.
 
-![SVD error vs condition number, by shape](svd_error_vs_cond.png)
+![SVD error vs condition number, geometric spectrum](svd_error_vs_cond.png)
+
+Note this rise is *within* a fixed shape. Condition number is **not** predictive
+*across* shapes (§1): at the same cond=1e6 the geometric/flat_tail spectra are
+broken while the outlier spectrum is fine — a high condition number is harmful only
+when it comes with many densely-spaced singular values.
 
 ## 3. Matrix size (geometric, cond=1e6)
 
