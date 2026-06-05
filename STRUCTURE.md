@@ -89,6 +89,13 @@ spectrum. Confirmed robust across random seeds.
 The ROCm fp32 error (red) is flat and far above 10% for every size 8…4096, while
 CPU fp32 (blue) stays ~1e-4; band = min/max over 5 seeds.
 
+The same holds with **randomized** singular values (log-uniform across the range
+instead of a geometric law; `plot_random_size.py`) — so the failure is not an
+artifact of the exact spectrum, only of having many singular values densely spread
+over a wide range:
+
+![SVD error vs size, random singular values](svd_error_vs_size_random.png)
+
 In fp64 the same matrices are accurate on **both** backends (~1e-12, ~9 orders
 below the failure threshold) — i.e. fp64 is the fix, and nothing about these
 matrices is intrinsically unsolvable:

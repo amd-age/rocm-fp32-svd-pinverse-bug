@@ -53,9 +53,17 @@ regenerate the plots:
 
 ```bash
 python structure_probe.py all        # shape, cond, size, gap sweeps -> tables
-python plot_size.py                  # svd_error_vs_size{,_fp64}.png
-python plot_cond.py                  # svd_error_vs_cond.png (error vs cond, by shape)
+python plot_size.py                  # svd_error_vs_size{,_fp64}.png  (geometric spectrum)
+python plot_random_size.py           # svd_error_vs_size_random.png   (RANDOM singular values)
+python plot_cond.py                  # svd_error_vs_cond.png          (error vs cond)
 ```
+
+`plot_random_size.py` draws the singular values at random (log-uniform across the
+range) instead of on a geometric law — it triggers the bug identically, confirming
+it's not an artifact of the exact spectrum. Its verdict is **relative to CPU fp32**
+(the achievable fp32 baseline), not an absolute threshold: at very high condition
+number fp32 cannot resolve the small singular values on *any* backend, so the bug
+is defined as ROCm doing far worse than CPU *while CPU is still accurate*.
 
 ## The artifact
 
@@ -96,7 +104,8 @@ characterization with sweeps in [`STRUCTURE.md`](STRUCTURE.md); regenerate with
 | `repro.py` | standalone reproduction on the real matrix (torch only) |
 | `repro_synthetic.py` | model-free reproduction — generates a tiny matrix, no data file |
 | `structure_probe.py` | sweeps spectrum shape / cond / size to characterize the trigger |
-| `plot_size.py` / `svd_error_vs_size*.png` | error-vs-size plots, fp32 + fp64 control |
+| `plot_size.py` / `svd_error_vs_size*.png` | error-vs-size plots, fp32 + fp64 control (geometric) |
+| `plot_random_size.py` / `svd_error_vs_size_random.png` | error-vs-size with RANDOM singular values |
 | `plot_cond.py` / `svd_error_vs_cond.png` | error-vs-condition-number, geometric spectrum (CPU vs ROCm) |
 | `cxx_layer1.pt` | the offending real `[1025,1025]` fp32 SPD matrix (~4 MB) |
 | `STRUCTURE.md` | what matrix structure triggers the bug (sweep results) |
