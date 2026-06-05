@@ -22,12 +22,40 @@ fine. It is the **ROCm fp32 SVD path specifically**.
 
 ## Run it
 
+Only dependency is `torch` (the plots/sweeps additionally use `numpy` +
+`matplotlib`). Run on AMD (ROCm) and on NVIDIA (CUDA) to compare; on a correct
+backend every row is `OK`.
+
+### On the shipped real matrix
+
 ```bash
-python repro.py            # uses ./cxx_layer1.pt
+python repro.py                  # uses ./cxx_layer1.pt
 ```
 
-Only dependency is `torch`. Run on AMD (ROCm) and on NVIDIA (CUDA) to compare;
-on a correct backend every row is `OK`.
+### On synthesized matrices (no data file needed)
+
+The bug reproduces on synthetic SPD matrices with a geometric singular-value
+spectrum, so you can trigger it without the shipped `.pt`. The matrix is built as
+`A = Q diag(s) Qᵀ` with `s` a geometric spectrum and `Q` Haar-random orthogonal
+(see `repro_synthetic.py` / `STRUCTURE.md`).
+
+```bash
+python repro_synthetic.py            # default: N=16, cond=1e6
+python repro_synthetic.py 8   1e6    # tiny: an 8x8 matrix already fails
+python repro_synthetic.py 4096 1e6   # large; size does not matter
+python repro_synthetic.py 512 1e4    # onset of the failure (cond ~1e4)
+python repro_synthetic.py 512 1e3    # below onset: OK even on ROCm
+```
+
+`repro_synthetic.py [N] [cond]` prints CPU-vs-ROCm fp32 singular-value error and a
+verdict. To map the failure across spectral shape / condition number / size and
+regenerate the plots:
+
+```bash
+python structure_probe.py all        # shape, cond, size, gap sweeps -> tables
+python plot_size.py                  # svd_error_vs_size{,_fp64}.png
+python plot_cond.py                  # svd_error_vs_cond.png (error vs cond, by shape)
+```
 
 ## The artifact
 
