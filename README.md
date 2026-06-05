@@ -68,7 +68,8 @@ characterization with sweeps in [`STRUCTURE.md`](STRUCTURE.md); regenerate with
 | `repro.py` | standalone reproduction on the real matrix (torch only) |
 | `repro_synthetic.py` | model-free reproduction — generates a tiny matrix, no data file |
 | `structure_probe.py` | sweeps spectrum shape / cond / size to characterize the trigger |
-| `plot_size.py` / `svd_error_vs_size.png` | error-vs-size plot (CPU vs ROCm fp32) |
+| `plot_size.py` / `svd_error_vs_size*.png` | error-vs-size plots, fp32 + fp64 control |
+| `plot_cond.py` / `svd_error_vs_cond.png` | error-vs-condition-number, by spectral shape |
 | `cxx_layer1.pt` | the offending real `[1025,1025]` fp32 SPD matrix (~4 MB) |
 | `STRUCTURE.md` | what matrix structure triggers the bug (sweep results) |
 | `ISSUE.md` | ready-to-file upstream bug report |
