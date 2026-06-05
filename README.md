@@ -106,6 +106,7 @@ characterization with sweeps in [`STRUCTURE.md`](STRUCTURE.md); regenerate with
 | `structure_probe.py` | sweeps spectrum shape / cond / size to characterize the trigger |
 | `plot_size.py` / `svd_error_vs_size*.png` | error-vs-size plots, fp32 + fp64 control (geometric) |
 | `plot_random_size.py` / `svd_error_vs_size_random.png` | error-vs-size with RANDOM singular values |
+| `random_matrix_probe.py` | random-ENTRY matrices (no QSQᵀ); shows the bug is not universal |
 | `plot_cond.py` / `svd_error_vs_cond.png` | error-vs-condition-number, geometric spectrum (CPU vs ROCm) |
 | `cxx_layer1.pt` | the offending real `[1025,1025]` fp32 SPD matrix (~4 MB) |
 | `STRUCTURE.md` | what matrix structure triggers the bug (sweep results) |

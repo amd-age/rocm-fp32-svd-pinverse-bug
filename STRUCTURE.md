@@ -104,6 +104,25 @@ matrices is intrinsically unsolvable:
 
 Regenerate both with `python plot_size.py`.
 
+## Random-entry matrices (no QSQᵀ construction)
+
+The QSQᵀ construction is only for *control* (dialing cond/shape and knowing the
+exact spectrum). The bug reproduces on matrices built from purely random entries,
+using the fp64 SVD of the same fp32 matrix as the reference (`random_matrix_probe.py`):
+
+| family (random entries) | cond(A) | CPU fp32 | ROCm fp32 | verdict |
+|---|---|---|---|---|
+| `gaussian` (iid randn) | 1.1e4 | 3.8e-7 | 1.3e-4 | benign (both small) |
+| `wishart` (G Gᵀ/M) | 3.0e2 | 4.8e-7 | 1.4e-4 | benign (both small) |
+| `scaled` (randn·diag) | 1.2e9 | 2.5e-6 | 3.1e-3 | **ROCm 1256× worse — broken** |
+| `corr_cov` (random data covariance) | 1.0e7 | 5.7e-7 | 8.0e-3 | **ROCm 14057× worse — broken** |
+
+This confirms (a) the bug is **not universal** — well-conditioned random matrices
+are fine, even `gaussian` at cond ~1e4 (its conditioning is one edge value over a
+dense well-separated bulk, like the `outlier` shape) — and (b) it needs no
+hand-constructed spectrum: random entries with an emergent ill-conditioned, dense
+spectrum (`scaled`, `corr_cov`) reproduce it, with fp64 as a trustworthy reference.
+
 ## Practical predicate
 
 A matrix is at risk on ROCm fp32 SVD/pinverse when **both**:
