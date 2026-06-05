@@ -123,6 +123,13 @@ dense well-separated bulk, like the `outlier` shape) — and (b) it needs no
 hand-constructed spectrum: random entries with an emergent ill-conditioned, dense
 spectrum (`scaled`, `corr_cov`) reproduce it, with fp64 as a trustworthy reference.
 
+Control: error vs size for **ordinary** iid Gaussian matrices (`plot_normal_size.py`).
+Both backends stay far below 10% at every size — ROCm peaks at only ~7e-4. (ROCm's
+benign baseline does grow steadily with N while CPU stays flat, but remains
+negligible for well-conditioned matrices.)
+
+![SVD error vs size, ordinary Gaussian matrices](svd_error_vs_size_normal.png)
+
 ## Practical predicate
 
 A matrix is at risk on ROCm fp32 SVD/pinverse when **both**:
